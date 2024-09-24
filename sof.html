@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IQ Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .timer {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            color: #333;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        label {
+            margin-left: 10px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .hide {
+            display: none;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #888;
+        }
+        .result-board {
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            height: 20px;
+            position: relative;
+        }
+        .progress-bar span {
+            display: block;
+            height: 100%;
+            background-color: #007BFF;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .feedback.correct {
+            color: green;
+        }
+        .feedback.incorrect {
+            color: red;
+        }
+        .iq-feedback {
+            font-size: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .iq-genius {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .iq-very-intelligent {
+            background-color: #2196F3;
+            color: white;
+        }
+        .iq-above-average {
+            background-color: #FFC107;
+            color: black;
+        }
+        .iq-average {
+            background-color: #FF9800;
+            color: white;
+        }
+        .iq-below-average {
+            background-color: #F44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="introPage" class="container">
+        <h1>Welcome to the IQ Test</h1>
+        <h2>Are you ready?</h2>
+        <button class="btn" onclick="startTest()">Yes, Let's Begin!</button>
+    </div>
+
+    <div id="iqTestPage" class="container hide">
+        <div class="timer" id="timer">15:00</div>
+        <h2>Level <span id="levelNum">1</span></h2>
+        <div class="progress-bar">
+            <span id="progress" style="width: 0%;">0%</span>
+        </div>
+        <form id="iqTestForm">
+            <div id="questionContainer"></div>
+            <button type="button" class="btn" onclick="prevLevel()">Back</button>
+            <button type="button" class="btn" onclick="nextLevel()">Continue</button>
+        </form>
+    </div>
+
+    <div id="resultPage" class="result-board hide">
+        <h1>IQ Test Completed!</h1>
+        <h2>Your Results:</h2>
+        <div id="finalScore" class="result-score"></div>
+        <div id="iqLevel" class="iq-feedback"></div>
+    </div>
+
+    <footer>
+        Made by Piyush Assudani
+    </footer>
+
+    <script>
+        let currentLevel = 1;
+        let totalScore = 0;
+        const totalQuestionsPerLevel = 6;
+        const totalLevels = 5;
+        let timer;
+        let timeRemaining = 15 * 60; // 15 minutes in seconds
+        const answers = {};
+
+        const questions = {
+            1: [
+                { question: "What is 5 + 3?", answers: { a: "7", b: "8", c: "9" }, correct: "b" },
+                { question: "What is the capital of France?", answers: { a: "Paris", b: "Berlin", c: "Rome" }, correct: "a" },
+                { question: "Which planet is closest to the sun?", answers: { a: "Venus", b: "Earth", c: "Mercury" }, correct: "c" },
+                { question: "What is 10 / 2?", answers: { a: "5", b: "10", c: "2" }, correct: "a" },
+                { question: "How many colors are in a rainbow?", answers: { a: "6", b: "7", c: "8" }, correct: "b" },
+                { question: "Which ocean is the largest?", answers: { a: "Pacific", b: "Atlantic", c: "Indian" }, correct: "a" }
+            ],
+            2: [
+                { question: "What is 15 x 4?", answers: { a: "60", b: "70", c: "50" }, correct: "a" },
+                { question: "Who wrote 'Hamlet'?", answers: { a: "Charles Dickens", b: "William Shakespeare", c: "J.K. Rowling" }, correct: "b" },
+                { question: "Which is the smallest prime number?", answers: { a: "2", b: "3", c: "1" }, correct: "a" },
+                { question: "What is the boiling point of water?", answers: { a: "90°C", b: "100°C", c: "80°C" }, correct: "b" },
+                { question: "Which country is home to the kangaroo?", answers: { a: "India", b: "Australia", c: "South Africa" }, correct: "b" },
+                { question: "What is the hardest natural substance?", answers: { a: "Iron", b: "Diamond", c: "Gold" }, correct: "b" }
+            ],
+            3: [
+                { question: "What is 243 divided by 9?", answers: { a: "26", b: "27", c: "25" }, correct: "b" },
+                { question: "Who discovered penicillin?", answers: { a: "Alexander Fleming", b: "Marie Curie", c: "Isaac Newton" }, correct: "a" },
+                { question: "What is the square root of 256?", answers: { a: "14", b: "15", c: "16" }, correct: "c" },
+                { question: "Which country is known as the land of the rising sun?", answers: { a: "Japan", b: "China", c: "South Korea" }, correct: "a" },
+                { question: "What is the freezing point of water?", answers: { a: "0°C", b: "100°C", c: "50°C" }, correct: "a" },
+                { question: "Who painted the 'Starry Night'?", answers: { a: "Pablo Picasso", b: "Vincent van Gogh", c: "Leonardo da Vinci" }, correct: "b" }
+            ],
+            4: [
+                { question: "What is the capital of Canada?", answers: { a: "Toronto", b: "Ottawa", c: "Vancouver" }, correct: "b" },
+                { question: "What is 18% of 200?", answers: { a: "36", b: "32", c: "40" }, correct: "a" },
+                { question: "What element does 'O' represent on the periodic table?", answers: { a: "Oxygen", b: "Osmium", c: "Oxide" }, correct: "a" },
+                { question: "Which year did World War II end?", answers: { a: "1945", b: "1944", c: "1946" }, correct: "a" },
+                { question: "What is the largest desert in the world?", answers: { a: "Sahara", b: "Gobi", c: "Antarctic" }, correct: "c" },
+                { question: "How many states are there in the United States?", answers: { a: "48", b: "50", c: "51" }, correct: "b" }
+            ],
+            5: [
+                { question: "What is the derivative of x^2?", answers: { a: "2x", b: "x", c: "x^2" }, correct: "a" },
+                { question: "Who formulated the theory of relativity?", answers: { a: "Isaac Newton", b: "Albert Einstein", c: "Galileo Galilei" }, correct: "b" },
+                { question: "What is the capital of Australia?", answers: { a: "Sydney", b: "Canberra", c: "Melbourne" }, correct: "b" },
+                { question: "What is the atomic number of Gold?", answers: { a: "79", b: "80", c: "78" }, correct: "a" },
+                { question: "Who wrote '1984'?", answers: { a: "George Orwell", b: "Aldous Huxley", c: "Ray Bradbury" }, correct: "a" },
+                { question: "What is the sum of the angles in a triangle?", answers: { a: "180°", b: "360°", c: "90°" }, correct: "a" }
+            ]
+        };
+
+        function startTest() {
+            document.getElementById("introPage").classList.add("hide");
+            document.getElementById("iqTestPage").classList.remove("hide");
+            loadLevel(currentLevel);
+            startTimer();
+        }
+
+        function loadLevel(level) {
+            const container = document.getElementById("questionContainer");
+            container.innerHTML = '';
+            questions[level].forEach((q, index) => {
+                const selectedAnswer = answers[level] && answers[level][index] ? answers[level][index] : '';
+                container.innerHTML += `
+                    <div class="question">
+                        <p><strong>Q${index + 1}:</strong> ${q.question}</p>
+                        <input type="radio" id="q${index}a" name="q${index}" value="a" ${selectedAnswer === 'a' ? 'checked' : ''}>
+                        <label for="q${index}a">${q.answers.a}</label><br>
+                        <input type="radio" id="q${index}b" name="q${index}" value="b" ${selectedAnswer === 'b' ? 'checked' : ''}>
+                        <label for="q${index}b">${q.answers.b}</label><br>
+                        <input type="radio" id="q${index}c" name="q${index}" value="c" ${selectedAnswer === 'c' ? 'checked' : ''}>
+                        <label for="q${index}c">${q.answers.c}</label>
+                        <div id="feedback-q${index}" class="feedback"></div>
+                    </div>
+                `;
+            });
+            document.getElementById("levelNum").innerText = level;
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const progress = (currentLevel / totalLevels) * 100;
+            document.getElementById("progress").style.width = `${progress}%`;
+            document.getElementById("progress").innerText = `${Math.round(progress)}%`;
+        }
+
+        function nextLevel() {
+            storeAnswers();
+            if (currentLevel < totalLevels) {
+                currentLevel++;
+                loadLevel(currentLevel);
+            } else {
+                endTest();
+            }
+        }
+
+        function prevLevel() {
+            storeAnswers();
+            if (currentLevel > 1) {
+                currentLevel--;
+                loadLevel(currentLevel);
+            }
+        }
+
+        function storeAnswers() {
+            answers[currentLevel] = {};
+            questions[currentLevel].forEach((q, index) => {
+                const selectedAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+                answers[currentLevel][index] = selectedAnswer ? selectedAnswer.value : null;
+            });
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById("timer").innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (timeRemaining <= 0) {
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function endTest() {
+            clearInterval(timer);
+            document.getElementById("iqTestPage").classList.add("hide");
+            document.getElementById("resultPage").classList.remove("hide");
+
+            let levelScore = 0;
+            Object.keys(answers).forEach(level => {
+                questions[level].forEach((q, index) => {
+                    if (answers[level][index] === q.correct) {
+                        levelScore++;
+                    }
+                });
+            });
+
+            totalScore = levelScore;
+            const attemptedQuestions = Object.keys(answers).reduce((sum, key) => sum + questions[key].length, 0);
+            document.getElementById("finalScore").innerHTML = `You scored ${totalScore} out of ${attemptedQuestions}!`;
+
+            let iqLevel, iqClass;
+            if (totalScore >= 25) {
+                iqLevel = "Genius";
+                iqClass = "iq-genius";
+            } else if (totalScore >= 20) {
+                iqLevel = "Very Intelligent";
+                iqClass = "iq-very-intelligent";
+            } else if (totalScore >= 15) {
+                iqLevel = "Above Average";
+                iqClass = "iq-above-average";
+            } else if (totalScore >= 10) {
+                iqLevel = "Average";
+                iqClass = "iq-average";
+            } else {
+                iqLevel = "Below Average";
+                iqClass = "iq-below-average";
+            }
+
+            document.getElementById("iqLevel").innerHTML = `Your IQ level is: <strong>${iqLevel}</strong>`;
+            document.getElementById("iqLevel").classList.add(iqClass);
+        }
+    </script>
+</body>
+</html>
